@@ -217,20 +217,30 @@ const DEFAULT_DISCOUNT = 20;
 const DEFAULT_EXPIRY_DAYS = 60;
 
 // ── API ───────────────────────────────────────────────────────
+// Apps Script requires no-cors for cross-origin requests.
+// We use a form POST with the data encoded, and GET with query params.
 async function apiGet(path, params = {}) {
   const qs = new URLSearchParams({ path, ...params }).toString();
-  const res = await fetch(`${API_URL}?${qs}`);
-  const json = await res.json();
+  const res = await fetch(`${API_URL}?${qs}`, {
+    method: 'GET',
+    redirect: 'follow',
+  });
+  const text = await res.text();
+  const json = JSON.parse(text);
   if (!json.ok) throw new Error(json.error || 'API error');
   return json.data;
 }
 
 async function apiPost(path, data = {}) {
-  const res = await fetch(API_URL, {
-    method: 'POST',
-    body: JSON.stringify({ path, data }),
+  const body = JSON.stringify({ path, data });
+  const res  = await fetch(API_URL, {
+    method:   'POST',
+    redirect: 'follow',
+    headers:  { 'Content-Type': 'text/plain' },
+    body,
   });
-  const json = await res.json();
+  const text = await res.text();
+  const json = JSON.parse(text);
   if (!json.ok) throw new Error(json.error || 'API error');
   return json.data;
 }
